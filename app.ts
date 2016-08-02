@@ -1,54 +1,40 @@
-import {Nav, Platform, ionicBootstrap} from "ionic-angular";
-import {StatusBar} from "ionic-native";
-import {HomePage} from "./pages/home/home";
-import {Component, ViewChild} from "@angular/core";
-import {FIREBASE_PROVIDERS, defaultFirebase} from "angularfire2";
-import {AuthProvider} from "./providers/auth/auth";
-import {AuthPage} from "./pages/auth/home/home";
+import {Component} from '@angular/core';
+import {Platform, ionicBootstrap} from 'ionic-angular';
+import {StatusBar} from 'ionic-native';
+import {HomePage} from './pages/home/home';
+import {TestListPage} from './pages/test-list/test-list';
+import {MapPage} from './pages/map/map';
+import { TabsPage } from './pages/tabs/tabs';
+import {FIREBASE_PROVIDERS, defaultFirebase, AngularFire, firebaseAuthConfig, AuthProviders, AuthMethods, FirebaseListObservable} from 'angularfire2';
 
 @Component({
-  templateUrl: "build/app.html",
+  	template: '<ion-nav [root]="rootPage"></ion-nav>',
+  	providers: [
+  		FIREBASE_PROVIDERS,
+  		defaultFirebase({
+  			apiKey: "AIzaSyBBqGSM87SUaxc63qss49nVfkTT4K-9m5g",
+        authDomain: "food-truck-finder-e5de5.firebaseapp.com",
+        databaseURL: "https://food-truck-finder-e5de5.firebaseio.com",
+        storageBucket: "food-truck-finder-e5de5.appspot.com",
+  		}), 
+  		firebaseAuthConfig({
+  			provider: AuthProviders.Password,
+  			method: AuthMethods.Password,
+  			remember: 'default',
+  			scope: ['email']
+  		})
+  	]
 })
+export class MyApp {
+  	rootPage: any = TabsPage;
+    items: FirebaseListObservable<any[]>;
 
-class MyApp {
-  @ViewChild(Nav) nav: Nav;
-  rootPage: any;
-  pages: Array<{title: string, component: any}>;
-  isAppInitialized: boolean;
-  constructor(private platform: Platform, protected auth: AuthProvider) {
-    this.pages = [{ title: "Home", component: HomePage }];
-    this.isAppInitialized = false;
-  }
-
-  ngOnInit() {
-    this.initializeApp();
-  }
-
-  initializeApp() {
-    this.platform.ready().then(() => {
-      StatusBar.styleDefault();
-
-      this.auth.getUserData().subscribe(data => {
-        if (!this.isAppInitialized) {
-          this.nav.setRoot(HomePage);
-          this.isAppInitialized = true;
-        }
-      }, err => {
-        this.nav.setRoot(AuthPage);
-      });
-    });
-  }
-
-  openPage(page) {
-    this.nav.setRoot(page.component);
-  }
+  	constructor(platform: Platform, af: AngularFire) {
+      this.items = af.database.list('/FoodTrucks');
+	    platform.ready().then(() => {
+	      	StatusBar.styleDefault();
+    	});
+  	}
 }
 
-ionicBootstrap(MyApp, [AuthProvider, FIREBASE_PROVIDERS,
-  defaultFirebase({
-    apiKey: "AIzaSyBBqGSM87SUaxc63qss49nVfkTT4K-9m5g",
-    authDomain: "food-truck-finder-e5de5.firebaseapp.com",
-    databaseURL: "https://food-truck-finder-e5de5.firebaseio.com",
-    storageBucket: "food-truck-finder-e5de5.appspot.com",
-  })], {
-});
+ionicBootstrap(MyApp);
